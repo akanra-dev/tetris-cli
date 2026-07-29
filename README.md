@@ -3,21 +3,27 @@
 A simple Tetris game built with Python + curses.
 
 ## Features
-- Scoring system
-- Level progression
-- Increasing speed
+- Color-coded pieces (7 warna beda tiap bentuk)
+- Scoring system + level progression
+- Increasing speed tiap level
+- Hard drop (spasi)
+- Arrow key + WASD support
 - Game over screen
 
 ## Controls
-- A → Move left
-- D → Move right
-- S → Move down
-- W → Rotate
-- Q → Quit
+
+| Tombol | Fungsi |
+|--------|--------|
+| ← / A / a | Move left |
+| → / D / d | Move right |
+| ↓ / S / s | Move down |
+| ↑ / W / w | Rotate |
+| **Spasi** | **Hard drop** (drop langsung) |
+| Q / q / ESC | Quit |
 
 ## Requirements
 Python 3 + curses (Linux)
 
-## Screenshot
-![Gameplay](tetris-gameplay.jpg)
-![Last-score](tetris-last-score.jpg)
+## Demo
+![Gameplay](rekaman-tetris.mp4)
+![Last Score](tetris-last-score.jpg)
