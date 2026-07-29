@@ -25,5 +25,5 @@ A simple Tetris game built with Python + curses.
 Python 3 + curses (Linux)
 
 ## Demo
-![Gameplay](rekaman-tetris.mp4)
+<video src="rekaman-tetris.mp4" controls width="600"></video>
 ![Last Score](tetris-last-score.jpg)
