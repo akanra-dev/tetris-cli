@@ -76,17 +76,22 @@ def draw(stdscr, board, piece, score, level):
                               curses.color_pair(piece["type"] + 1))
     stdscr.refresh()
 
+def lock_piece(board, piece):
+    merge(board, piece)
+    new_board, cleared = clear_lines(board)
+    return new_board, cleared
+
 def main(stdscr):
     curses.curs_set(0)
     curses.start_color()
-    curses.init_pair(1, curses.COLOR_CYAN, -1)
-    curses.init_pair(2, curses.COLOR_YELLOW, -1)
-    curses.init_pair(3, curses.COLOR_MAGENTA, -1)
-    curses.init_pair(4, curses.COLOR_GREEN, -1)
-    curses.init_pair(5, curses.COLOR_RED, -1)
-    curses.init_pair(6, curses.COLOR_BLUE, -1)
-    curses.init_pair(7, curses.COLOR_WHITE, -1)
-    stdscr.timeout(50)
+    curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
+    curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+    curses.init_pair(3, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+    curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    curses.init_pair(5, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(6, curses.COLOR_BLUE, curses.COLOR_BLACK)
+    curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_BLACK)
+    stdscr.nodelay(True)
 
     board = [[0] * WIDTH for _ in range(HEIGHT)]
     piece = new_piece()
@@ -96,6 +101,18 @@ def main(stdscr):
     level = 1
     lines_cleared_total = 0
 
+    def spawn():
+        nonlocal piece, board, score, level, lines_cleared_total
+        board, cleared = lock_piece(board, piece)
+        if cleared:
+            score += cleared * 100
+            lines_cleared_total += cleared
+            level = 1 + lines_cleared_total // 5
+        piece = new_piece()
+        if collision(board, piece):
+            return False
+        return True
+
     while True:
         fall_speed = max(0.1, 0.5 - (level - 1) * 0.05)
 
@@ -103,43 +120,37 @@ def main(stdscr):
             if not collision(board, piece, dy=1):
                 piece["y"] += 1
             else:
-                merge(board, piece)
-                board, cleared = clear_lines(board)
-                if cleared > 0:
-                    score += cleared * 100
-                    lines_cleared_total += cleared
-                    level = 1 + lines_cleared_total // 5
-
-                piece = new_piece()
-
-                if collision(board, piece):
+                if not spawn():
                     break
-
             last_fall = time.time()
 
-        try:
-            key = stdscr.getkey()
-            if key == "a" and not collision(board, piece, dx=-1):
+        key = stdscr.getch()
+        if key != -1:
+            if key in (ord('a'), ord('A'), curses.KEY_LEFT) and not collision(board, piece, dx=-1):
                 piece["x"] -= 1
-            elif key == "d" and not collision(board, piece, dx=1):
+            elif key in (ord('d'), ord('D'), curses.KEY_RIGHT) and not collision(board, piece, dx=1):
                 piece["x"] += 1
-            elif key == "s" and not collision(board, piece, dy=1):
+            elif key in (ord('s'), ord('S'), curses.KEY_DOWN) and not collision(board, piece, dy=1):
                 piece["y"] += 1
-            elif key == "w":
+            elif key in (ord('w'), ord('W'), curses.KEY_UP):
                 r = rotate(piece["shape"])
                 if not collision(board, piece, rotated=r):
                     piece["shape"] = r
-            elif key == "q":
+            elif key == ord(' '):
+                while not collision(board, piece, dy=1):
+                    piece["y"] += 1
+                if not spawn():
+                    break
+                last_fall = time.time()
+            elif key in (ord('q'), ord('Q'), 27):
                 break
-        except curses.error:
-            pass
 
         draw(stdscr, board, piece, score, level)
+        time.sleep(0.03)
 
-    # GAME OVER SCREEN
     stdscr.nodelay(False)
     stdscr.clear()
-    stdscr.addstr(HEIGHT // 2, WIDTH -3, "GAME OVER")
+    stdscr.addstr(HEIGHT // 2, WIDTH - 3, "GAME OVER")
     stdscr.addstr(HEIGHT // 2 + 1, WIDTH - 5, f"Final Score: {score}")
     stdscr.addstr(HEIGHT // 2 + 3, WIDTH - 6, "Press any key...")
     stdscr.refresh()
